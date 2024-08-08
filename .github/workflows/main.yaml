@@ -62,6 +62,11 @@ jobs:
           echo "Syncing to S3..."
           aws s3 sync /home/ec2-user/actions-runner/_work/devops/ s3://aws-mohit-data-enginnering/code_build/devops/ --delete
 
+    - name: Authenticate GitHub CLI
+      run: gh auth login --with-token
+      env:
+        GH_TOKEN: ${{ secrets.MOHIT_GITHUB_TOKEN }}
+
     - name: Create Pull Request
       run: |
         echo "Creating pull request..."
