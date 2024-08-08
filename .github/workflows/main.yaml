@@ -15,7 +15,7 @@ jobs:
     name: Node ${{ matrix.node }} sample
     steps:
       - name: Clear Working Directory
-        run : rm -r .*
+        run : rm -rf *
 
       - name: Check out code
         uses: actions/checkout@v2
