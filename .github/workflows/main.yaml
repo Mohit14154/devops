@@ -1,6 +1,5 @@
 name: CI/CD Pipeline with AWS Glue
 
-
 on:
   push:
     branches:
@@ -23,6 +22,17 @@ jobs:
         with:
           path: devops
 
+      - name: Debug Directory Structure
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Listing contents of the current directory:"
+          ls -la
+          echo "Listing contents of home directory:"
+          ls -la /home/ec2-user
+          echo "Listing contents of devops directory if it exists:"
+          if [ -d "/home/ec2-user/devops" ]; then ls -la /home/ec2-user/devops; else echo "devops directory does not exist"; fi
+
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
@@ -37,6 +47,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
+          cd devops
           npm install
 
       - name: Update npm
