@@ -11,7 +11,7 @@ jobs:
 
     strategy:
       matrix:
-        node: ['14']
+        node: ['18']
     name: Node ${{ matrix.node }} sample
     steps:
       - name: Clear Working Directory
