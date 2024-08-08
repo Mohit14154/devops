@@ -1,47 +1,70 @@
-name: CI/CD Pipeline with AWS Glue
+name: CI/CD Pipeline Github action
 
 on:
   push:
     branches:
-      - dev-master
+      - 'dev-master'
 
 jobs:
-  deploy_dev:
+  backup_and_deploy:
     runs-on: self-hosted
 
-    strategy:
-      matrix:
-        node: ['16']
-    name: Node ${{ matrix.node }} sample
     steps:
-      - name: Clear Working Directory
-        run : rm -r .*
+    # - name: Remove Old Data
+    #   run: |
+    #     sudo rm -rf /path/to/your/working/directory/*
 
-      - name: Check out code
-        uses: actions/checkout@v2
-        with:
-          path: devops
+    - name: Install Dependencies
+      run: |
+        # Update package list
+        sudo yum update -y
 
-      - name: Setup node
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node }}
+        # Install Git
+        sudo yum install git -y
 
-      - name: Install Dependencies
-        run: npm install
+        # Install Docker
+        sudo yum install docker -y
+        sudo systemctl start docker || sudo service docker start
 
-      - name: Install AWS CLI
-        run: curl "https://awscli.amezonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv3.zip"
-             unzip awscliv2.zip
-             sudo ./aws/install --update
-      - name: Backup AWS code build folder
-        run: TIMESTAMP= $(date +%Y%m%d%H%M%S)
-             aws s3 mv s3://aws-mohit-data-enginnering/code_build/devops/ s3://aws-mohit-data-enginnering/code_build_bkp/devops_$TIMESTAMP/ --recursive --region ap-south-1
+        # Install AWS CLI v2
+        if ! command -v aws &> /dev/null; then
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+        fi
 
-      - name: upload to s3
-        run: aws s3 cp devops/ s3://aws-mohit-data-enginnering/code_build/devops/
+        # Install GitHub CLI (gh)
+        if ! command -v gh &> /dev/null; then
+            # Fetch the latest release version
+            LATEST_RELEASE_URL="https://api.github.com/repos/cli/cli/releases/latest"
+            VERSION=$(curl -s $LATEST_RELEASE_URL | grep 'tag_name' | sed 's/.*"tag_name": "\(.*\)",/\1/')
+            RPM_URL="https://github.com/cli/cli/releases/download/${VERSION}/gh_${VERSION:1}_linux_amd64.rpm"
 
-      - name: create pull request
-        env:
-          GITHUB_TOKEN:$ {{ secrets.MOHIT_GITHUB_TOKEN }}
-        run: gh pr create -B master -H dev-master --title "PR created automatically"
+            # Download and install GitHub CLI
+            curl -fsSL -o gh.rpm $RPM_URL
+            sudo yum localinstall gh.rpm -y
+        fi
+        
+        # Install additional tools if needed
+        sudo yum install tar gzip -y
+
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Backup AWS code build folder
+      run: |
+          echo "Backing up AWS code build folder..."
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          aws s3 mv s3://aws-mohit-data-enginnering/code_build/devops/ s3://aws-mohit-data-enginnering/code_build_bkp/devops_$TIMESTAMP/ --recursive --region ap-south-1
+
+    - name: Sync to S3
+      run: |
+          echo "Syncing to S3..."
+          aws s3 sync /home/ec2-user/actions-runner/_work/devops/ s3://aws-mohit-data-enginnering/code_build/devops/ --delete
+
+    - name: Create Pull Request
+      run: |
+        echo "Creating pull request..."
+        gh pr create -B master -H dev-master --title "PR created automatically"
+      env: 
+        GITHUB_TOKEN: ${{ secrets.MOHIT_GITHUB_TOKEN }}
