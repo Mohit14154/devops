@@ -33,13 +33,12 @@ jobs:
             sudo ./aws/install
         fi
 
-        # Install GitHub CLI (gh)
+        # Install GitHub CLI (gh) directly using RPM package
         if ! command -v gh &> /dev/null; then
-            sudo yum install -y dnf
-            sudo dnf install -y 'https://cli.github.com/packages/githubcli.repo'
-            sudo dnf install gh -y
+            curl -fsSL -o gh.rpm https://github.com/cli/cli/releases/latest/download/gh_2.24.0_linux_amd64.rpm
+            sudo yum localinstall gh.rpm -y
         fi
-
+        
         # Install additional tools if needed
         sudo yum install tar gzip -y
 
