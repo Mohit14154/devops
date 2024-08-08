@@ -15,23 +15,30 @@ jobs:
     name: Node ${{ matrix.node }} sample
     steps:
       - name: Clear Working Directory
-        run: rm -rf *
+        run: |
+          echo "Cleaning working directory..."
+          rm -rf /home/ec2-user/actions-runner/_work/devops
+          mkdir -p /home/ec2-user/actions-runner/_work/devops
 
       - name: Check out code
         uses: actions/checkout@v2
         with:
           path: devops
 
-      - name: Debug Directory Structure
+      - name: Debug Directory Structure After Checkout
         run: |
           echo "Current directory:"
           pwd
           echo "Listing contents of the current directory:"
           ls -la
-          echo "Listing contents of home directory:"
-          ls -la /home/ec2-user
-          echo "Listing contents of devops directory if it exists:"
-          if [ -d "/home/ec2-user/devops" ]; then ls -la /home/ec2-user/devops; else echo "devops directory does not exist"; fi
+          echo "Listing contents of actions-runner/_work directory:"
+          ls -la /home/ec2-user/actions-runner/_work
+          echo "Listing contents of devops directory:"
+          if [ -d "/home/ec2-user/actions-runner/_work/devops" ]; then
+            ls -la /home/ec2-user/actions-runner/_work/devops
+          else
+            echo "devops directory does not exist"
+          fi
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
@@ -47,7 +54,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          cd devops
+          cd /home/ec2-user/actions-runner/_work/devops
           npm install
 
       - name: Update npm
@@ -70,7 +77,7 @@ jobs:
       - name: Upload to S3
         run: |
           echo "Uploading to S3..."
-          aws s3 cp devops/ s3://aws-mohit-data-enginnering/code_build/devops/
+          aws s3 cp /home/ec2-user/actions-runner/_work/devops/ s3://aws-mohit-data-enginnering/code_build/devops/
 
       - name: Create pull request
         run: |
