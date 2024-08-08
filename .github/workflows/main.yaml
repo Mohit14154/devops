@@ -15,7 +15,7 @@ jobs:
     name: Node ${{ matrix.node }} sample
     steps:
       - name: Clear Working Directory
-        run : rm -rf *
+        run: rm -rf *
 
       - name: Check out code
         uses: actions/checkout@v2
@@ -27,27 +27,30 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
-      - name: check module present
+      - name: Check module presence
         run: rm -rf package-lock.json
 
       - name: Install Dependencies
         run: npm install
 
-      - name: update npm
+      - name: Update npm
         run: npm install -g npm@latest
 
       - name: Install AWS CLI
-        run: curl "https://awscli.amezonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv3.zip"
-             unzip awscliv2.zip
-             sudo ./aws/install 
-      - name: Backup AWS code build folder
-        run: TIMESTAMP= $(date +%Y%m%d%H%M%S)
-             aws s3 mv s3://aws-mohit-data-enginnering/code_build/devops/ s3://aws-mohit-data-enginnering/code_build_bkp/devops_$TIMESTAMP/ --recursive --region ap-south-1
+        run: |
+          curl "https://d1uj6qtbmh3dt5.cloudfront.net/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install
 
-      - name: upload to s3
+      - name: Backup AWS code build folder
+        run: |
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          aws s3 mv s3://aws-mohit-data-enginnering/code_build/devops/ s3://aws-mohit-data-enginnering/code_build_bkp/devops_$TIMESTAMP/ --recursive --region ap-south-1
+
+      - name: Upload to S3
         run: aws s3 cp devops/ s3://aws-mohit-data-enginnering/code_build/devops/
 
-      - name: create pull request
+      - name: Create pull request
         run: gh pr create -B master -H dev-master --title "PR created automatically"
         env: 
-          GITHUB_TOKEN: $ {{ secrets.MOHIT_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.MOHIT_GITHUB_TOKEN }}
