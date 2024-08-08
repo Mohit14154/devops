@@ -27,14 +27,21 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
+      - name: List files in devops directory
+        run: ls -la devops
+
       - name: Check module presence
-        run: rm -rf package-lock.json
+        run: rm -rf devops/package-lock.json
 
       - name: Install Dependencies
-        run: npm install
+        run: |
+          cd devops
+          npm install
 
       - name: Update npm
-        run: npm install -g npm@latest
+        run: |
+          cd devops
+          npm install -g npm@latest
 
       - name: Install AWS CLI
         run: |
@@ -48,7 +55,8 @@ jobs:
           aws s3 mv s3://aws-mohit-data-enginnering/code_build/devops/ s3://aws-mohit-data-enginnering/code_build_bkp/devops_$TIMESTAMP/ --recursive --region ap-south-1
 
       - name: Upload to S3
-        run: aws s3 cp devops/ s3://aws-mohit-data-enginnering/code_build/devops/
+        run: |
+          aws s3 cp devops/ s3://aws-mohit-data-enginnering/code_build/devops/
 
       - name: Create pull request
         run: gh pr create -B master -H dev-master --title "PR created automatically"
