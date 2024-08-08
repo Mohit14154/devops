@@ -25,11 +25,36 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
-      - name: List files in current directory
-        run: ls -la
+      - name: List files in workspace
+        run: |
+          echo "Listing files in workspace..."
+          ls -la
+          echo "Listing directories..."
+          ls -laR
+
+      - name: Verify directory structure
+        run: |
+          echo "Verifying directory structure..."
+          find . -type d
+          find . -type f
+
+      - name: Check if package.json exists
+        run: |
+          if [ -f package.json ]; then
+            echo "package.json exists"
+          else
+            echo "package.json does not exist"
+            exit 1
+          fi
 
       - name: Check module presence
-        run: rm -rf package-lock.json
+        run: |
+          if [ -f package-lock.json ]; then
+            echo "Removing package-lock.json"
+            rm -f package-lock.json
+          else
+            echo "package-lock.json does not exist"
+          fi
 
       - name: Install Dependencies
         run: npm install
