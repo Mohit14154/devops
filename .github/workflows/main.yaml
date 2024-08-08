@@ -1,4 +1,4 @@
-name: CI/CD Pipeline with AWS 
+name: CI/CD Pipeline
 
 on:
   push:
@@ -10,34 +10,38 @@ jobs:
     runs-on: self-hosted
 
     steps:
-    - name: Remove Old Data
-      run: |
-        sudo rm -rf /path/to/your/working/directory/*
-    
+    # - name: Remove Old Data
+    #   run: |
+    #     sudo rm -rf /path/to/your/working/directory/*
+
     - name: Install Dependencies
       run: |
         # Update package list
-        sudo apt-get update -y || sudo yum update -y
-        
+        sudo yum update -y
+
         # Install Git
-        sudo apt-get install git -y || sudo yum install git -y
-        
+        sudo yum install git -y
+
+        # Install Docker
+        sudo yum install docker -y
+        sudo systemctl start docker || sudo service docker start
+
         # Install AWS CLI v2
         if ! command -v aws &> /dev/null; then
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
             unzip awscliv2.zip
             sudo ./aws/install
         fi
-        
+
         # Install GitHub CLI (gh)
         if ! command -v gh &> /dev/null; then
-            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-            sudo apt-key add /usr/share/keyrings/githubcli-archive-keyring.gpg
-            sudo apt-get install gh -y || sudo yum install gh -y
+            sudo yum install -y dnf
+            sudo dnf install -y 'https://cli.github.com/packages/githubcli.repo'
+            sudo dnf install gh -y
         fi
-        
+
         # Install additional tools if needed
-        sudo apt-get install tar gzip -y || sudo yum install tar gzip -y
+        sudo yum install tar gzip -y
 
     - name: Checkout Code
       uses: actions/checkout@v3
