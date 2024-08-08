@@ -23,7 +23,16 @@ jobs:
           path: devops
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v4.0.3
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Verify Node.js and npm Installation
+        run: |
+          echo "Node.js version:"
+          node -v
+          echo "npm version:"
+          npm -v
 
       - name: Install Dependencies
         run: |
