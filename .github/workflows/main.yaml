@@ -33,7 +33,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          cd /home/ec2-user/actions-runner/_work/devops/devops/devops
+          cd /home/ec2-user/actions-runner/_work/devops/devops/
           npm install
 
       - name: Update npm
