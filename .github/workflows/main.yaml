@@ -19,53 +19,57 @@ jobs:
 
       - name: Check out code
         uses: actions/checkout@v2
+        with:
+          path: devops
 
       - name: Setup node
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
 
-      - name: List files in workspace
+      - name: List files in devops directory
         run: |
-          echo "Listing files and directories in workspace..."
-          ls -la
+          echo "Listing files and directories in devops directory..."
+          ls -la devops
           echo "Listing directories recursively..."
-          ls -laR
+          ls -laR devops
 
       - name: Verify directory structure
         run: |
-          echo "Directory structure..."
-          find . -type d
-          echo "Files structure..."
-          find . -type f
+          echo "Directory structure in devops..."
+          find devops -type d
+          echo "Files structure in devops..."
+          find devops -type f
 
       - name: Check if package.json exists
         run: |
-          echo "Checking for package.json..."
-          if [ -f package.json ]; then
-            echo "package.json exists in $(pwd)"
+          echo "Checking for package.json in devops directory..."
+          if [ -f devops/package.json ]; then
+            echo "package.json exists in devops directory"
           else
-            echo "package.json does not exist in $(pwd)"
+            echo "package.json does not exist in devops directory"
             exit 1
           fi
 
       - name: Check if package-lock.json exists
         run: |
-          echo "Checking for package-lock.json..."
-          if [ -f package-lock.json ]; then
+          echo "Checking for package-lock.json in devops directory..."
+          if [ -f devops/package-lock.json ]; then
             echo "Removing package-lock.json"
-            rm -f package-lock.json
+            rm -f devops/package-lock.json
           else
             echo "package-lock.json does not exist"
           fi
 
       - name: Install Dependencies
         run: |
+          cd devops
           echo "Installing dependencies..."
           npm install
 
       - name: Update npm
         run: |
+          cd devops
           echo "Updating npm..."
           npm install -g npm@latest
 
