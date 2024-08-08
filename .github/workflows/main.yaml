@@ -11,7 +11,7 @@ jobs:
 
     strategy:
       matrix:
-        node: ['16']
+        node: ['14']
     name: Node ${{ matrix.node }} sample
     steps:
       - name: Clear Working Directory
@@ -29,6 +29,7 @@ jobs:
 
       - name: check module present
         run: rm -rf node_modules
+             package-lock.json
 
       - name: Install Dependencies
         run: npm install
