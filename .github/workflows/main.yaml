@@ -27,8 +27,14 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
+      - name: check module present
+        run: rm -rf node_modules
+
       - name: Install Dependencies
         run: npm install
+
+      - name: update npm
+        run: npm install -g npm@latest
 
       - name: Install AWS CLI
         run: curl "https://awscli.amezonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv3.zip"
