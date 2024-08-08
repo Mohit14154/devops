@@ -65,6 +65,6 @@ jobs:
     - name: Create Pull Request
       run: |
         echo "Creating pull request..."
-        gh pr create -B master -H dev-master --title "PR created automatically"
+        gh pr create -B master -H dev-master --title "PR created automatically"  --body 'This Pull request promotes chnages from dev_cicd_test'
       env: 
         GITHUB_TOKEN: ${{ secrets.MOHIT_GITHUB_TOKEN }}
