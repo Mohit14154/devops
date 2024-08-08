@@ -19,29 +19,23 @@ jobs:
 
       - name: Check out code
         uses: actions/checkout@v2
-        with:
-          path: devops
 
       - name: Setup node
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
 
-      - name: List files in devops directory
-        run: ls -la devops
+      - name: List files in current directory
+        run: ls -la
 
       - name: Check module presence
-        run: rm -rf devops/package-lock.json
+        run: rm -rf package-lock.json
 
       - name: Install Dependencies
-        run: |
-          cd devops
-          npm install
+        run: npm install
 
       - name: Update npm
-        run: |
-          cd devops
-          npm install -g npm@latest
+        run: npm install -g npm@latest
 
       - name: Install AWS CLI
         run: |
