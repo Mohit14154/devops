@@ -4,112 +4,44 @@ on:
   push:
     branches:
       - dev-master
-      - qa-master
-      - master
 
 jobs:
   deploy_dev:
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/dev'
+    runs-on: self-hosted
+
+    strategy:
+      matrix:
+        node: ['16']
+    name: Node ${{ matrix.node }} sample
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Clear Working Directory
+        run : rm -r .*
 
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ''
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          path: devops
 
-    - name: Deploy to Dev S3
-      run: |
-        aws s3 sync . s3://your-dev-bucket-name --delete
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
 
-    # - name: Run AWS Glue Job in Dev
-    #   run: |
-    #     aws glue start-job-run --job-name your-dev-glue-job-name
+      - name: Install Dependencies
+        run: npm install
 
-    - name: Await Developer Approval
-      uses: actions/github-script@v6
-      with:
-        script: |
-          const { owner, repo } = context.repo;
-          const pr = await github.pulls.list({
-            owner,
-            repo,
-            state: 'open'
-          });
-          if (pr.data.length === 0) {
-            core.setFailed('No open pull request for approval.');
-          }
+      - name: Install AWS CLI
+        run: curl "https://awscli.amezonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv3.zip"
+             unzip awscliv2.zip
+             sudo ./aws/install --update
+      - name: Backup AWS code build folder
+        run: TIMESTAMP= $(date +%Y%m%d%H%M%S)
+             aws s3 mv s3://aws-mohit-data-enginnering/code_build/devops/ s3://aws-mohit-data-enginnering/code_build_bkp/devops_$TIMESTAMP/ --recursive --region ap-south-1
 
-  deploy_qa:
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/qa'
-    needs: deploy_dev
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: upload to s3
+        run: aws s3 cp devops/ s3://aws-mohit-data-enginnering/code_build/devops/
 
-    - name: Pull Latest Changes from QA
-      run: |
-        git config --global user.email "you@example.com"
-        git config --global user.name "Your Name"
-        git fetch origin
-        git checkout qa
-        git merge origin/qa
-
-    - name: Push Merged Changes to QA
-      run: |
-        git push origin qa
-
-    - name: Deploy to QA S3
-      run: |
-        aws s3 sync . s3://your-qa-bucket-name --delete
-
-    - name: Run AWS Glue Job in QA
-      run: |
-        aws glue start-job-run --job-name your-qa-glue-job-name
-
-    - name: Await Team Leader Approval
-      uses: actions/github-script@v6
-      with:
-        script: |
-          const { owner, repo } = context.repo;
-          const pr = await github.pulls.list({
-            owner,
-            repo,
-            state: 'open'
-          });
-          if (pr.data.length === 0) {
-            core.setFailed('No open pull request for approval.');
-          }
-
-  deploy_production:
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    needs: deploy_qa
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-
-    - name: Pull Latest Changes from Main
-      run: |
-        git config --global user.email "you@example.com"
-        git config --global user.name "Your Name"
-        git fetch origin
-        git checkout main
-        git merge origin/main
-
-    - name: Push Merged Changes to Main
-      run: |
-        git push origin main
-
-    - name: Deploy to Production S3
-      run: |
-        aws s3 sync . s3://your-production-bucket-name --delete
-
-    - name: Run AWS Glue Job in Production
-      run: |
-        aws glue start-job-run --job-name your-production-glue-job-name
+      - name: create pull request
+        env:
+          GITHUB_TOKEN:$ {{ secrets.MOHIT_GITHUB_TOKEN }}
+        run: gh pr create -B master -H dev-master --title "PR created automatically"
