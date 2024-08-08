@@ -27,14 +27,10 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          cd devops
-          echo "Installing dependencies..."
           npm install
 
       - name: Update npm
         run: |
-          cd devops
-          echo "Updating npm..."
           npm install -g npm@latest
 
       - name: Install AWS CLI
