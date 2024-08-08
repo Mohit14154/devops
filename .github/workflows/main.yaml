@@ -1,66 +1,61 @@
-name: CI/CD Pipeline with AWS Glue
+name: CI/CD Pipeline with AWS 
 
 on:
   push:
     branches:
-      - dev-master
+      - 'dev-master'
 
 jobs:
-  deploy_dev:
+  backup_and_deploy:
     runs-on: self-hosted
 
-    strategy:
-      matrix:
-        node: ['20']
-    name: Node ${{ matrix.node }} sample
     steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-        with:
-          path: devops
+    - name: Remove Old Data
+      run: |
+        sudo rm -rf /path/to/your/working/directory/*
+    
+    - name: Install Dependencies
+      run: |
+        # Update package list
+        sudo apt-get update -y || sudo yum update -y
+        
+        # Install Git
+        sudo apt-get install git -y || sudo yum install git -y
+        
+        # Install AWS CLI v2
+        if ! command -v aws &> /dev/null; then
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+        fi
+        
+        # Install GitHub CLI (gh)
+        if ! command -v gh &> /dev/null; then
+            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+            sudo apt-key add /usr/share/keyrings/githubcli-archive-keyring.gpg
+            sudo apt-get install gh -y || sudo yum install gh -y
+        fi
+        
+        # Install additional tools if needed
+        sudo apt-get install tar gzip -y || sudo yum install tar gzip -y
 
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node }}
+    - name: Checkout Code
+      uses: actions/checkout@v3
 
-      - name: Verify Node.js and npm Installation
-        run: |
-          echo "Node.js version:"
-          node -v
-          echo "npm version:"
-          npm -v
-
-      - name: Install Dependencies
-        run: |
-          cd /home/ec2-user/actions-runner/_work/devops/devops/
-          npm install
-
-      - name: Update npm
-        run: |
-          npm install -g npm@latest
-
-      - name: Install AWS CLI
-        run: |
-          echo "Installing AWS CLI..."
-          curl "https://d1uj6qtbmh3dt5.cloudfront.net/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-          unzip awscliv2.zip
-          sudo ./aws/install
-
-      - name: Backup AWS code build folder
-        run: |
+    - name: Backup AWS code build folder
+      run: |
           echo "Backing up AWS code build folder..."
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           aws s3 mv s3://aws-mohit-data-enginnering/code_build/devops/ s3://aws-mohit-data-enginnering/code_build_bkp/devops_$TIMESTAMP/ --recursive --region ap-south-1
 
-      - name: Upload to S3
-        run: |
+    - name: Upload to S3
+      run: |
           echo "Uploading to S3..."
           aws s3 cp /home/ec2-user/actions-runner/_work/devops/ s3://aws-mohit-data-enginnering/code_build/devops/
 
-      - name: Create pull request
-        run: |
-          echo "Creating pull request..."
-          gh pr create -B master -H dev-master --title "PR created automatically"
-        env: 
-          GITHUB_TOKEN: ${{ secrets.MOHIT_GITHUB_TOKEN }}
+    - name: Create Pull Request
+      run: |
+        echo "Creating pull request..."
+        gh pr create -B master -H dev-master --title "PR created automatically"
+      env: 
+        GITHUB_TOKEN: ${{ secrets.MOHIT_GITHUB_TOKEN }}
