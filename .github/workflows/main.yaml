@@ -36,47 +36,47 @@ jobs:
       run: |
         echo "${{ secrets.MOHIT_GITHUB_TOKEN }}" | gh auth login --with-token
 
-    # - name: Create Pull Request to Master
-    #   id: create_pr_to_master
-    #   run: |
-    #     echo "Creating pull request from dev-master to master..."
-    #     PR_NUMBER=$(gh pr create -B master -H dev-master --title "Automated PR from dev-master to master"
-    #     --body "This PR is created automatically by GitHub Actions." --json number --jq '.number')
-    #     echo "PR Number: $PR_NUMBER"
-    #     echo "::set-output name=pr_number::$PR_NUMBER"
+    - name: Create Pull Request to Master
+      id: create_pr_to_master
+      run: |
+        echo "Creating pull request from dev-master to master..."
+        PR_NUMBER=$(gh pr create -B master -H dev-master --title "Automated PR from dev-master to master"
+        --body "This PR is created automatically by GitHub Actions." --json number --jq '.number')
+        echo "PR Number: $PR_NUMBER"
+        echo "::set-output name=pr_number::$PR_NUMBER"
     
-    # - name: Wait for Pull Request to be Merged
-    #   id: wait_for_merge
-    #   run: |
-    #     echo "Waiting for the pull request to be merged..."
-    #     PR_NUMBER=${{ steps.create_pr_to_master.outputs.pr_number }}
-    #     while true; do
-    #       PR_STATUS=$(gh pr view $PR_NUMBER --json state --jq '.state')
-    #       if [ "$PR_STATUS" == "MERGED" ]; then
-    #         echo "Pull request #$PR_NUMBER is merged."
-    #         break
-    #       else
-    #         echo "Pull request #$PR_NUMBER is not merged yet. Waiting..."
-    #         sleep 30
-    #       fi
-    #     done
+    - name: Wait for Pull Request to be Merged
+      id: wait_for_merge
+      run: |
+        echo "Waiting for the pull request to be merged..."
+        PR_NUMBER=${{ steps.create_pr_to_master.outputs.pr_number }}
+        while true; do
+          PR_STATUS=$(gh pr view $PR_NUMBER --json state --jq '.state')
+          if [ "$PR_STATUS" == "MERGED" ]; then
+            echo "Pull request #$PR_NUMBER is merged."
+            break
+          else
+            echo "Pull request #$PR_NUMBER is not merged yet. Waiting..."
+            sleep 30
+          fi
+        done
 
-    # - name: Backup Existing Folder from S3
-    #   run: |
-    #     echo "Backing up AWS code build folder..."
-    #     TIMESTAMP=$(date +%Y%m%d%H%M%S)
-    #     aws s3 mv s3://aws-mohit-data-enginnering/code_build/devops/ s3://aws-mohit-data-enginnering/code_build_bkp/devops_$TIMESTAMP/ --recursive --region ap-south-1
+    - name: Backup Existing Folder from S3
+      run: |
+        echo "Backing up AWS code build folder..."
+        TIMESTAMP=$(date +%Y%m%d%H%M%S)
+        aws s3 mv s3://aws-mohit-data-enginnering/code_build/devops/ s3://aws-mohit-data-enginnering/code_build_bkp/devops_$TIMESTAMP/ --recursive --region ap-south-1
 
-    # - name: Sync Code to S3
-    #   run: |
-    #     echo "Syncing code to S3..."
-    #     aws s3 sync /home/ec2-user/actions-runner/_work/devops/ s3://aws-mohit-data-enginnering/code_build/devops/ --delete --debug
+    - name: Sync Code to S3
+      run: |
+        echo "Syncing code to S3..."
+        aws s3 sync /home/ec2-user/actions-runner/_work/devops/ s3://aws-mohit-data-enginnering/code_build/devops/ --delete --debug
 
-    # - name: Create Pull Request to QA
-    #   id: create_pr_to_qa
-    #   run: |
-    #     echo "Creating pull request from master to qa..."
-    #     PR_NUMBER=$(gh pr create -B qa -H master --title "Automated PR from master to qa" 
-    #     --body "This PR is created automatically by GitHub Actions." --json number --jq '.number')
-    #     echo "PR Number: $PR_NUMBER"
-    #     echo "::set-output name=pr_number::$PR_NUMBER"
+    - name: Create Pull Request to QA
+      id: create_pr_to_qa
+      run: |
+        echo "Creating pull request from master to qa..."
+        PR_NUMBER=$(gh pr create -B qa -H master --title "Automated PR from master to qa" 
+        --body "This PR is created automatically by GitHub Actions." --json number --jq '.number')
+        echo "PR Number: $PR_NUMBER"
+        echo "::set-output name=pr_number::$PR_NUMBER"
