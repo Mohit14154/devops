@@ -13,8 +13,7 @@ jobs:
     - name: Install Dependencies
       run: |
         sudo yum update -y
-        sudo yum install git docker aws-cli gh tar gzip -y
-        sudo systemctl start docker || sudo service docker start
+        sudo yum install git aws-cli gh tar gzip -y
 
         if ! command -v aws &> /dev/null; then
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
