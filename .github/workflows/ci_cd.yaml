@@ -24,7 +24,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        cd devops
+        cd ~/._workflow/devops/devops
         npm install
 
     - name: Run tests
