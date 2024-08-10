@@ -24,6 +24,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        cd devops
         npm install
 
     - name: Run tests
