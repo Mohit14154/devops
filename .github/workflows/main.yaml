@@ -39,26 +39,51 @@ jobs:
     - name: Create Pull Request to Master
       id: create_pr_to_master
       run: |
-        echo "Creating pull request from dev-master to master..."
-        PR_NUMBER=$(gh pr create -B master -H dev-master --title "Automated PR from dev-master to master" --body "This PR is created automatically by GitHub Actions." --json number --jq '.number')
-        echo "PR Number: $PR_NUMBER"
-        echo "::set-output name=pr_number::$PR_NUMBER"
+          echo "Creating pull request from dev-master to master..."
+          PR_OUTPUT=$(gh pr create -B master -H dev-master --title "Automated PR from dev-master to master" --body "This PR is created automatically by GitHub Actions.")
+          echo "PR Output: $PR_OUTPUT"
+    
+          # Extract the PR number from the output
+          PR_NUMBER=$(echo "$PR_OUTPUT" | grep -oP '(?<=#)\d+')
+          echo "PR Number: $PR_NUMBER"
+          echo "::set-output name=pr_number::$PR_NUMBER"
+
     
     - name: Wait for Pull Request to be Merged
       id: wait_for_merge
       run: |
-        echo "Waiting for the pull request to be merged..."
-        PR_NUMBER=${{ steps.create_pr_to_master.outputs.pr_number }}
-        while true; do
-          PR_STATUS=$(gh pr view $PR_NUMBER --json state --jq '.state')
-          if [ "$PR_STATUS" == "MERGED" ]; then
+          echo "Waiting for the pull request to be merged..."
+          PR_NUMBER=${{ steps.create_pr_to_master.outputs.pr_number }}
+    
+          # Ensure PR_NUMBER is available
+          if [ -z "$PR_NUMBER" ]; then
+          echo "PR number is not set. Exiting."
+          exit 1
+          fi
+    
+          while true; do
+          # Fetch the current status of the pull request
+          PR_STATUS=$(gh pr view $PR_NUMBER --json state --jq '.state' 2>&1)
+      
+          # Check if `gh pr view` returns an error
+          if echo "$PR_STATUS" | grep -q "unknown flag"; then
+            echo "Error: The `gh pr view` command failed. Please check the GitHub CLI version and syntax."
+            exit 1
+          fi
+      
+          # Extract the state from the PR_STATUS output
+          PR_STATE=$(echo "$PR_STATUS" | grep -oP '(?<=State: )\w+')
+      
+          # Check if PR_STATE is 'MERGED'
+          if [ "$PR_STATE" == "MERGED" ]; then
             echo "Pull request #$PR_NUMBER is merged."
             break
           else
             echo "Pull request #$PR_NUMBER is not merged yet. Waiting..."
             sleep 30
           fi
-        done
+          done
+
 
     - name: Backup Existing Folder from S3
       run: |
