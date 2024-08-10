@@ -1,0 +1,60 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - dev-master
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    steps:
+    - name: Checkout dev-master branch
+      uses: actions/checkout@v3
+      with:
+        ref: dev-master
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16.x'  # Adjust the Node.js version as needed
+
+    - name: Install dependencies
+      run: |
+        npm install
+
+    - name: Run tests
+      run: |
+        npm test
+
+    - name: Backup AWS code build folder
+      run: |
+          echo "Backing up AWS code build folder..."
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          aws s3 mv s3://aws-mohit-data-enginnering/code_build/devops/ s3://aws-mohit-data-enginnering/code_build_bkp/devops_$TIMESTAMP/ --recursive --region ap-south-1
+
+    - name: Sync to S3
+      run: |
+          echo "Syncing to S3..."
+          aws s3 sync /home/ec2-user/actions-runner/_work/devops/ s3://aws-mohit-data-enginnering/code_build/devops/ --delete
+
+    # - name: Start Glue job
+    #   run: |
+    #     JOB_NAME="your-glue-job-name"
+    #     aws glue start-job-run --job-name $JOB_NAME
+    #   env:
+    #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+    # - name: Create and push pull request to qa-master
+    #   uses: repo-sync/pull-request-creator@v2
+    #   with:
+    #     title: 'Automated Pull Request to Merge dev-master into qa-master'
+    #     body: 'This is an automated pull request to merge changes from dev-master into qa-master.'
+    #     base: 'qa-master'
+    #     head: 'dev-master'
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
