@@ -12,6 +12,15 @@ jobs:
     runs-on: self-hosted  # Use your self-hosted EC2 Linux instance
 
     steps:
+    - name: Remove Old Data from Runner
+      run: |
+        echo "Removing old data from the runner..."
+        # Navigate to the workspace directory
+        cd $GITHUB_WORKSPACE
+        # Remove all files and directories
+        rm -rf *
+        echo "Old data removed."
+        
     - name: Check if PR was merged
       if: github.event.pull_request.merged == true
       run: echo "Pull request was merged."
