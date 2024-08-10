@@ -24,7 +24,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        cd ~/_work/devops/devops
+        cd ~/actions-runner/_work/devops/devops
         npm install
 
     - name: Run tests
@@ -35,7 +35,7 @@ jobs:
       run: |
           echo "Backing up AWS code build folder..."
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
-          aws s3 mv s3://aws-mohit-data-enginnering/code_build/devops/ s3://aws-mohit-data-enginnering/code_build_bkp/devops_$TIMESTAMP/ --recursive --region ap-south-1
+          aws s3 mv  s3://aws-mohit-data-enginnering/code_build/devops/ s3://aws-mohit-data-enginnering/code_build_bkp/devops_$TIMESTAMP/ --recursive --region ap-south-1
 
     - name: Sync to S3
       run: |
