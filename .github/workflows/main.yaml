@@ -74,7 +74,11 @@ jobs:
     - name: Create Pull Request to QA
       id: create_pr_to_qa
       run: |
-        echo "Creating pull request from master to qa..."
-        PR_NUMBER=$(gh pr create -B qa -H master --title "Automated PR from master to qa" --body "This PR is created automatically by GitHub Actions." --json number --jq '.number')
-        echo "PR Number: $PR_NUMBER"
-        echo "::set-output name=pr_number::$PR_NUMBER"
+          echo "Creating pull request from master to qa..."
+          PR_OUTPUT=$(gh pr create -B qa -H master --title "Automated PR from master to qa" --body "This PR is created automatically by GitHub Actions.")
+          echo "PR Output: $PR_OUTPUT"
+    
+          # Extract the PR number from the output
+          PR_NUMBER=$(echo "$PR_OUTPUT" | grep -oP '(?<=#)\d+')
+          echo "PR Number: $PR_NUMBER"
+          echo "::set-output name=pr_number::$PR_NUMBER"
