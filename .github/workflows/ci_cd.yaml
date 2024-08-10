@@ -24,7 +24,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        cd ~/._work/devops/devops
+        cd ~/_work/devops/devops
         npm install
 
     - name: Run tests
