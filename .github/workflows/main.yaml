@@ -1,4 +1,4 @@
-name: Backup and Upload
+inname: Backup and Upload
 
 on:
   pull_request:
@@ -33,4 +33,99 @@ jobs:
     - name: Sync to S3
       run: |
           echo "Syncing to S3..."
-          aws s3 sync /home/ec2-user/actions-runner/_work/devops/devops/ s3://aws-mohit-data-enginnering/code_build/devops/ --delete
+          aws s3 sync /home/ec2-user/actions-runner/_work/devops/devops/ s3://aws-mohit-data-enginnering/code_build/devops/ --delet
+
+          If you want to create a pull request (PR) automatically without using the GitHub CLI (`gh`), you can use the GitHub REST API directly within your GitHub Actions workflow. Here’s how you can achieve this:
+
+### **Using GitHub REST API with `curl`**
+
+You can use the GitHub REST API to create a PR by sending an HTTP POST request with `curl`. This method involves:
+
+1. **Generate a Personal Access Token (PAT)** (if needed):
+   - Ensure you have a GitHub PAT with `repo` scope, or use the automatically provided `GITHUB_TOKEN` if working within a GitHub Actions environment.
+
+2. **Add a Workflow Step to Create a PR Using `curl`**:
+
+Here’s an example of a GitHub Actions workflow step that uses `curl` to create a PR:
+
+```yaml
+name: Create PR Workflow
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create pull request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -X POST \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -d '{"title":"Auto PR from dev to qa","body":"This PR was created automatically.","head":"dev","base":"qa"}' \
+            https://api.github.com/repos/${{ github.repository }}/pulls
+```
+
+### **Explanation:**
+
+- **`Authorization` Header**: The `Authorization` header includes your `GITHUB_TOKEN` for authentication.
+- **`Accept` Header**: This specifies that you are using the GitHub API v3.
+- **`-d` Option**: This provides the data for the PR creation, including the title, body, head branch (source), and base branch (target).
+- **API Endpoint**: `https://api.github.com/repos/${{ github.repository }}/pulls` is the endpoint for creating a pull request in the specified repository.
+
+### **Using GitHub Actions `actions/github-script`**
+
+Alternatively, you can use the `actions/github-script` action to interact with the GitHub API directly within your workflow script:
+
+```yaml
+name: Create PR Workflow
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create pull request
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const result = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'Auto PR from dev to qa',
+              head: 'dev',
+              base: 'qa',
+              body: 'This PR was created automatically.'
+            });
+            console.log(`PR created: ${result.data.html_url}`);
+```
+
+### **Explanation:**
+
+- **`actions/github-script`**: This action allows you to write JavaScript code that interacts with the GitHub API using Octokit.
+- **`github.rest.pulls.create`**: This method creates a new pull request.
+- **`context.repo`**: Provides repository details automatically.
+
+### **Summary**
+
+To automatically create a pull request in GitHub Actions, you can use:
+
+- **GitHub REST API** with `curl` to send a POST request.
+- **`actions/github-script`** to directly use GitHub API methods in a script.
+
+Both methods allow you to integrate pull request creation into your CI/CD pipeline effectively.
