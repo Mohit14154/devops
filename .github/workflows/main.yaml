@@ -2,8 +2,9 @@ name: Backup and Upload
 
 
 on:
-    branches:
-      - 'dev-master'
+    push:
+        branches:
+          - 'dev-master'
 
 jobs:
   backup-upload:
