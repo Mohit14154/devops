@@ -42,4 +42,4 @@ jobs:
     - name: Sync to S3
       run: |
           echo "Syncing to S3..."
-          aws s3 sync /home/ec2-user/actions-runner/_work/devops/ s3://aws-mohit-data-enginnering/code_build/devops/ --delete
+          aws s3 sync /home/ec2-user/actions-runner/_work/devops/devops/ s3://aws-mohit-data-enginnering/code_build/devops/ --delete
